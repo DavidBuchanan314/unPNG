@@ -10,13 +10,21 @@ All unPNGs are fully valid PNGs, and can be viewed in standard image viewers.
 
 However, most PNGs are not valid unPNGs - you need to use a special encoder (like the one in this repo).
 
-## What?
+## Why not?
+
+- There's 20 bytes of overhead per row. If you're dealing with very small images, that's a lot.
+
+- BMP already exist - although it's a rather crufty format. It would be interesting to compare unPNG to a minimal BMP encoder/decoder.
+
+## What's in this repo?
 
 This repo contains an encoder and a decoder program. The encoder is writte in Python, and the decoder is a single-header C library.
 
 Notably, the decoder **never copies any buffers**. It simply verifies the structure of the buffer you give it, and returns the metadata you need to view/process it - the width, height, pixel format, stride.
 
 The decoder also doesn't bother verifying checksums, for simplicity - but it could if it wanted to.
+
+Also note that although unPNG is designed to be implemented securely, this implementation is prototype-quality and should not be especially trusted.
 
 ## How?
 
@@ -29,6 +37,8 @@ PNG supports ancilliary chunks and other sources of flexibility. unPNG does not 
 Until I write proper docs/specs, looking at `encoder.py` is perhaps the easiest way to understand the details.
 
 # TODO
+
+- Implement pixel formats other than RGB888, RGBA8888
 
 - Write a spec!
 

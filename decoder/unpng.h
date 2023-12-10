@@ -3,9 +3,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
 
+#ifdef UNPNG_DEBUG
+#include <assert.h>
 #include <stdio.h> // only used for debug printfs
+#endif
 
 #define BUF_CMP(buffer, target) memcmp(buffer, target, sizeof(target))
 
@@ -82,6 +84,7 @@ static const uint32_t UNPNG_OVERHEAD = UNPNG_HEADER_SIZE + sizeof(UNPNG_MAGIC_RO
 static const uint32_t UNPNG_ROW_OVERHEAD = 20;
 static const uint32_t UNPNG_MAX_RES = 0x2000;
 
+// this is really the only thing we do that resembles traditional parsing
 static uint32_t unpng_unpack_be32(const uint8_t data[4])
 {
 	return (data[0] << 24) + \
@@ -131,10 +134,14 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 		return UNPNG_ERR_LENGTH;
 	}
 
-	img->buffer = data + UNPNG_HEADER_SIZE + 16; // this is +16 and not +20 because it doesn't include the crc32, which is at the end of the row
+	img->buffer = data + UNPNG_HEADER_SIZE + 16; // 16 would be sizeof(row_magic) if we'd declared it yet
 
-#if 0
-	// this assert can safely be removed in non-debug builds
+#if UNPNG_DEBUG
+	fprintf(stderr, "width=%u\n", img->width);
+	fprintf(stderr, "height=%u\n", img->height);
+	fprintf(stderr, "stride=%u\n", img->stride);
+	fprintf(stderr, "pixfmt=%u\n", img->pixfmt);
+
 	assert(UNPNG_HEADER_SIZE + 16 + img->stride * img->height < length);
 #endif
 
@@ -144,8 +151,8 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 		was a valid PNG. We don't check checksums, though.
 	*/
 
-	uint32_t row_len = img->stride - 19;
-	uint32_t idat_len = img->stride - 12;
+	const uint32_t row_len = img->stride - 19;
+	const uint32_t idat_len = img->stride - 12;
 	unsigned char row_magic[] = {
 		0x00, (idat_len >> 16) & 0xff, (idat_len >> 8) & 0xff, idat_len & 0xff, // PNG chunk length
 		'I', 'D', 'A', 'T', // IDAT chunk type
@@ -155,7 +162,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 		0x00 // png row filter
 	};
 
-#if 0
+#if UNPNG_DEBUG
 	fprintf(stderr, "DEBUG: row_magic = ");
 	for (size_t i=0; i<sizeof(row_magic); i++) {
 		fprintf(stderr, "%02hhx ", row_magic[i]);
