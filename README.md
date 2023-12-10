@@ -68,3 +68,11 @@ Until I write proper docs/specs, looking at the source is perhaps the easiest wa
 - Set up tests and fuzzing.
 
 - Consider also writing an encoder in C, and a decoder in Python.
+
+## Some other things you may be interested in:
+
+- http://public-domain.advel.cz/ - Some minimal zlib and PNG implementations.
+
+- https://en.wikipedia.org/wiki/Netpbm - A minimal bitmap file format.
+
+- https://richg42.blogspot.com/2023/12/announcing-cpng-compatible-network.html - CPNG, a backwards compatible fork of PNG. While unPNG is focused on minimalism, CPNG focuses on enhancements. In some sense they're opposites!
