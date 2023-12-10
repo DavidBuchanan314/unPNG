@@ -30,11 +30,13 @@ The decoder also doesn't bother verifying checksums, for simplicity - but it cou
 
 `demo.c` is a simple demo program that hooks up `unpng.h` to SDL2, allowing you to view decoded images.
 
-Although unPNG is designed to be implemented securely, this implementation is prototype-quality, mostly untested, and should not be especially trusted. I may also make breaking changes to the spec.
+Although unPNG is designed to be implemented securely, **this implementation is prototype-quality, mostly untested, and should not be especially trusted**. I may also make breaking changes to the spec.
 
 ## How?
 
 The non-compression is achieved using uncompressed DEFLATE blocks. The maximum length of an uncompressed DEFLATE block is 0xffff bytes - smaller than most image files. To avoid having to parse and re-assemble blocks, each row of the image is encapsulated within its own DEFLATE block. This gives a theoretical maximum horizontal resolution of 16383 pixels (assuming `RGBA8888` pixel format), although unPNG further limits itself to 8192px in width and height, just to stay on the safe side. These limits also ensure that the whole image can always fit in a single IDAT chunk.
+
+Always using a single IDAT chunk negates the need for chunk reassembly etc.
 
 PNG supports ancilliary chunks and other sources of flexibility. unPNG does not - we only support a specific chunk layout. The unPNG decoder never attempts to "parse" chunks (or parse zlib, or parse DEFLATE), it simply treats the expected values as magic byte sequences, and bails out if they don't match.
 
