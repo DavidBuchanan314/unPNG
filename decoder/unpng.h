@@ -64,8 +64,8 @@ static const uint8_t UNPNG_MAGIC_IEND[] = {
 
 static const uint32_t UNPNG_MAGIC1_OFF = sizeof(UNPNG_MAGIC0) + 8; // +8 for png width and height fields
 static const uint32_t UNPNG_MAGIC2_OFF = UNPNG_MAGIC1_OFF + sizeof(UNPNG_MAGIC1_RGB888) + 4; // +4 for the IHDR crc
-static const uint32_t UNPNG_MAGIC3_OFF = UNPNG_MAGIC2_OFF + sizeof(UNPNG_MAGIC2);
-static const uint32_t UNPNG_HEADER_SIZE = UNPNG_MAGIC3_OFF + 10; // 10 is sizeof(idat_magic)
+static const uint32_t UNPNG_IDAT_OFF = UNPNG_MAGIC2_OFF + sizeof(UNPNG_MAGIC2);
+static const uint32_t UNPNG_HEADER_SIZE = UNPNG_IDAT_OFF + 10; // 10 is sizeof(idat_magic)
 static const uint32_t UNPNG_OVERHEAD = UNPNG_HEADER_SIZE + sizeof(UNPNG_MAGIC_ROWEND) + 8 + sizeof(UNPNG_MAGIC_IEND); // +8 for adler32 + IDAT crc
 static const uint32_t UNPNG_ROW_OVERHEAD = 8; // sizeof(row_magic)
 static const uint32_t UNPNG_MAX_RES = 0x2000;
@@ -73,10 +73,10 @@ static const uint32_t UNPNG_MAX_RES = 0x2000;
 // this is really the only thing we do that resembles traditional parsing
 static uint32_t unpng_unpack_be32(const uint8_t data[4])
 {
-	return (data[0] << 24) + \
-	       (data[1] << 16) + \
-	       (data[2] << 8) + \
-	       (data[3] << 0);
+	return (data[0] << 24) | \
+	       (data[1] << 16) | \
+	       (data[2] <<  8) | \
+	       (data[3] <<  0);
 }
 
 static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
@@ -133,14 +133,17 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 #endif
 
 	/*
-		At this point, all the actual parsing is complete, but we still
-		want to check various constrants to ensure that the input
-		was a valid PNG. We don't check checksums, though.
+	At this point, all the actual parsing is already complete, but we still
+	want to check various constrants to ensure that the input
+	was a valid PNG. We don't check checksums, though.
 	*/
 
 	const uint32_t idat_len = img->stride * img->height + 8; // due to constraints on width and height, this can never overflow
 	const unsigned char idat_magic[] = {
-		(idat_len >> 24) & 0xff, (idat_len >> 16) & 0xff, (idat_len >> 8) & 0xff, idat_len & 0xff,
+		(idat_len >> 24) & 0xff,
+		(idat_len >> 16) & 0xff,
+		(idat_len >>  8) & 0xff,
+		(idat_len >>  0) & 0xff,
 		'I',  'D',  'A',  'T',
 		0x78, 0x01 // zlib magic
 	};
@@ -151,7 +154,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 	}
 	fprintf(stderr, "\n");
 #endif
-	if (BUF_CMP(data + UNPNG_MAGIC3_OFF, idat_magic) != 0) {
+	if (BUF_CMP(data + UNPNG_IDAT_OFF, idat_magic) != 0) {
 		return UNPNG_ERR_MAGIC;
 	}
 
@@ -160,7 +163,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 		0x02, 0x08, 0x00, // deflate padding, start non-final uncompressed deflate block
 		row_len & 0xff, (row_len >> 8) & 0xff,
 		(row_len & 0xff) ^ 0xff, ((row_len >> 8) & 0xff) ^ 0xff,
-		0x00 // png row filter
+		0x00 // png row filter byte
 	};
 
 #if UNPNG_DEBUG

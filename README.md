@@ -14,19 +14,21 @@ However, most PNGs are not valid unPNGs - you need to use a special encoder (lik
 
 - There's 8 bytes of overhead per row. If you're dealing with very small images, that's a lot.
 
-- BMP already exist - although it's a rather crufty format. It would be interesting to compare unPNG to a minimal BMP encoder/decoder.
+- BMP already exists - although it's a rather crufty format. It would be interesting to compare unPNG to a minimal BMP encoder/decoder.
 
 - libpng (and others) are well documented and battle-tested.
+
+- Parsing itself is not the only source of unsafety when dealing with image formats.
 
 ## What's in this repo?
 
 This repo contains an encoder and a decoder program. The encoder is writte in Python, and the decoder is a single-header C library.
 
-Notably, the decoder **never copies any buffers**. It simply verifies the structure of the buffer you give it, and returns the metadata you need to view/process it - the width, height, pixel format, stride.
+Notably, the decoder **never copies any buffers**. It simply verifies the structure of the buffer you give it, and returns the metadata you need to view/process it - the width, height, pixel format, stride (aka pitch).
 
-The decoder also doesn't bother verifying checksums, for simplicity - but it could if it wanted to.
+The decoder also doesn't bother verifying checksums, for simplicity - but it could if it wanted to. The *en*coder on the other hand emits files with valid checksums, passing checks from `pngfix` et al.
 
-Also note that although unPNG is designed to be implemented securely, this implementation is prototype-quality and should not be especially trusted.
+Also note that although unPNG is designed to be implemented securely, this implementation is prototype-quality, mostly untested, and should not be especially trusted.
 
 ## How?
 
@@ -43,7 +45,9 @@ IDAT
 IEND
 ```
 
-The `unPn` chunk contains a single byte - ascii `G`, meaning that if you inspect the file in a hexeditor you'll see the string `unPnG`. This chunk has two purposes - firstly it makes the file more easily identifiable as an unPNG file (to humans and machines alike), and secondly it acts as padding, ensuring that the first byte of actual pixel data occurs `0x40` bytes into the file. Alignment is nice to have!
+The `unPn` chunk contains a single byte - ascii `G`, meaning that if you inspect the file in a hexeditor you'll see the string `unPnG`. This chunk has two purposes - firstly it makes the file more easily identifiable as an unPNG file (to humans and machines alike), and secondly it acts as padding, ensuring that the first byte of pixel data occurs `0x40` bytes into the file. Alignment is nice to have!
+
+*If* I end up adding support for palette modes, there'll be a PLTE chunk too.
 
 Until I write proper docs/specs, looking at `encoder.py` is perhaps the easiest way to understand the details.
 
@@ -57,4 +61,4 @@ Until I write proper docs/specs, looking at `encoder.py` is perhaps the easiest 
 
 - Make `unpng.h` more portable.
 
-- Set up fuzzing.
+- Set up tests and fuzzing.
