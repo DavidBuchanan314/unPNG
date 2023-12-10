@@ -103,7 +103,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 	img->width = unpng_unpack_be32(data, sizeof(UNPNG_MAGIC0));
 	img->height = unpng_unpack_be32(data, sizeof(UNPNG_MAGIC0) + 4);
 
-	if (img->width > UNPNG_MAX_RES || img->height > UNPNG_MAX_RES) {
+	if (img->width == 0 || img->height == 0 || img->width > UNPNG_MAX_RES || img->height > UNPNG_MAX_RES) {
 		return UNPNG_ERR_SIZE; // 8k ought to be enough for anyone!
 	}
 
