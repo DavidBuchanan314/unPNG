@@ -75,23 +75,25 @@ static const uint8_t UNPNG_MAGIC_IEND[] = {
 	0xae, 0x42, 0x60, 0x82
 };
 
-static const uint32_t UNPNG_HEADER_SIZE = sizeof(UNPNG_MAGIC0) + 8 + sizeof(UNPNG_MAGIC1_RGB888) + 4 + sizeof(UNPNG_MAGIC2_RGB888);
+static const uint32_t UNPNG_MAGIC1_OFF = sizeof(UNPNG_MAGIC0) + 8;
+static const uint32_t UNPNG_MAGIC2_OFF = UNPNG_MAGIC1_OFF + sizeof(UNPNG_MAGIC1_RGB888) + 4;
+static const uint32_t UNPNG_HEADER_SIZE = UNPNG_MAGIC2_OFF + sizeof(UNPNG_MAGIC2_RGB888);
 static const uint32_t UNPNG_OVERHEAD = UNPNG_HEADER_SIZE + sizeof(UNPNG_MAGIC_ROWEND) + 8 + sizeof(UNPNG_MAGIC_IEND);
 static const uint32_t UNPNG_ROW_OVERHEAD = 20;
 static const uint32_t UNPNG_MAX_RES = 0x2000;
 
-static uint32_t unpng_unpack_be32(const uint8_t *data, size_t offset)
+static uint32_t unpng_unpack_be32(const uint8_t data[4])
 {
-	return (data[offset + 0] << 24) + \
-	       (data[offset + 1] << 16) + \
-	       (data[offset + 2] << 8) + \
-	       (data[offset + 3] << 0);
+	return (data[0] << 24) + \
+	       (data[1] << 16) + \
+	       (data[2] << 8) + \
+	       (data[3] << 0);
 }
 
 static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 {
-	// make sure the file is at least longer than the smallest possible
-	if (length < UNPNG_OVERHEAD) {
+	// make sure the file is at least as long as the headers
+	if (length < UNPNG_HEADER_SIZE) {
 		return UNPNG_ERR_LENGTH;
 	}
 
@@ -100,22 +102,22 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 		return UNPNG_ERR_MAGIC;
 	}
 
-	img->width = unpng_unpack_be32(data, sizeof(UNPNG_MAGIC0));
-	img->height = unpng_unpack_be32(data, sizeof(UNPNG_MAGIC0) + 4);
+	img->width = unpng_unpack_be32(data + sizeof(UNPNG_MAGIC0));
+	img->height = unpng_unpack_be32(data + sizeof(UNPNG_MAGIC0) + 4);
 
 	if (img->width == 0 || img->height == 0 || img->width > UNPNG_MAX_RES || img->height > UNPNG_MAX_RES) {
 		return UNPNG_ERR_SIZE; // 8k ought to be enough for anyone!
 	}
 
 	// Figure out the pixel format by comparing against all possible magic byte values
-	if (BUF_CMP(data + sizeof(UNPNG_MAGIC0) + 8, UNPNG_MAGIC1_RGB888) == 0) {
-		if (BUF_CMP(data + sizeof(UNPNG_MAGIC0) + 8 + sizeof(UNPNG_MAGIC1_RGB888) + 4, UNPNG_MAGIC2_RGB888) != 0) {
+	if (BUF_CMP(data + UNPNG_MAGIC1_OFF, UNPNG_MAGIC1_RGB888) == 0) {
+		if (BUF_CMP(data + UNPNG_MAGIC2_OFF, UNPNG_MAGIC2_RGB888) != 0) {
 			return UNPNG_ERR_MAGIC;
 		}
 		img->pixfmt = UNPNG_PIXFMT_RGB888;
 		img->stride = img->width * 3 + UNPNG_ROW_OVERHEAD;
-	} else if (BUF_CMP(data + sizeof(UNPNG_MAGIC0) + 8, UNPNG_MAGIC1_RGBA8888) == 0) {
-		if (BUF_CMP(data + sizeof(UNPNG_MAGIC0) + 8 + sizeof(UNPNG_MAGIC1_RGBA8888) + 4, UNPNG_MAGIC2_RGBA8888) != 0) {
+	} else if (BUF_CMP(data + UNPNG_MAGIC1_OFF, UNPNG_MAGIC1_RGBA8888) == 0) {
+		if (BUF_CMP(data + UNPNG_MAGIC2_OFF, UNPNG_MAGIC2_RGBA8888) != 0) {
 			return UNPNG_ERR_MAGIC;
 		}
 		img->pixfmt = UNPNG_PIXFMT_RGBA8888;
@@ -124,6 +126,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 		return UNPNG_ERR_MAGIC;
 	}
 
+	// make sure the buffer is big enough
 	if (img->stride * img->height + UNPNG_OVERHEAD != length) {
 		return UNPNG_ERR_LENGTH;
 	}
