@@ -54,11 +54,6 @@ PIL_MODES = {
 	UNPNG_PIXFMT.RGBA8888: "RGBA",
 }
 
-UNPNG_MAGICS = {
-	UNPNG_PIXFMT.RGB888:   b"RGB888  ",
-	UNPNG_PIXFMT.RGBA8888: b"RGBA8888",
-}
-
 PNG_COLOUR_TYPES = {
 	UNPNG_PIXFMT.RGB888:   2,
 	UNPNG_PIXFMT.RGBA8888: 6,
@@ -75,10 +70,9 @@ def unpng_encode(out, pixfmt: UNPNG_PIXFMT, im: Image):
 
 	out.write(PNG_SIGNATURE)
 	write_png_chunk(out, b"IHDR", encode_png_ihdr(width, height, colour_type=PNG_COLOUR_TYPES[pixfmt]))
-	write_png_chunk(out, b"unPg", UNPNG_MAGICS[pixfmt])
+	write_png_chunk(out, b"unPn", b"G")
 
-	# zlib magic goes in its own chunk!
-	write_png_chunk(out, b"IDAT", b"\x78\x01\x00\x00\x00\xff\xff")
+	idat = b"\x78\x01"
 
 	if pixfmt == UNPNG_PIXFMT.RGB888:
 		base_stride = 3 * width
@@ -100,10 +94,12 @@ def unpng_encode(out, pixfmt: UNPNG_PIXFMT, im: Image):
 		row_data = imdata[y*base_stride:(y+1)*base_stride]
 		adlersum = zlib.adler32(b"\x00", adlersum) # account for filter byte
 		adlersum = zlib.adler32(row_data, adlersum)
-		write_png_chunk(out, b"IDAT", row_magic + row_data)
+		idat += row_magic + row_data
 
 	# final deflate block of length zero, plus adler32
-	write_png_chunk(out, b"IDAT", b"\x03\x00" + adlersum.to_bytes(4, "big"))
+	idat += b"\x03\x00" + adlersum.to_bytes(4, "big")
+
+	write_png_chunk(out, b"IDAT", idat)
 	write_png_chunk(out, b"IEND", b"")
 
 if __name__ == "__main__":

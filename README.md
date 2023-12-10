@@ -12,9 +12,11 @@ However, most PNGs are not valid unPNGs - you need to use a special encoder (lik
 
 ## Why not?
 
-- There's 20 bytes of overhead per row. If you're dealing with very small images, that's a lot.
+- There's 8 bytes of overhead per row. If you're dealing with very small images, that's a lot.
 
 - BMP already exist - although it's a rather crufty format. It would be interesting to compare unPNG to a minimal BMP encoder/decoder.
+
+- libpng (and others) are well documented and battle-tested.
 
 ## What's in this repo?
 
@@ -30,9 +32,18 @@ Also note that although unPNG is designed to be implemented securely, this imple
 
 The non-compression is achieved using uncompressed DEFLATE blocks. The maximum length of an uncompressed DEFLATE block is 0xffff bytes - smaller than most image files. To avoid having to parse and re-assemble blocks, each row of the image is encapsulated within its own DEFLATE block. This gives a theoretical maximum horizontal resolution of 16383 pixels (assuming `RGBA8888` pixel format), although unPNG further limits itself to 8192px in width and height, just to stay on the safe side.
 
-Each row is also encapsulated within its own PNG IDAT chunk. This is technically unnecessary (since a 8192x8192px image would be able to fit in a single chunk), but it makes the encode/decode logic ever so slightly simpler (I might change my mind about this!).
+PNG supports ancilliary chunks and other sources of flexibility. unPNG does not - we only support a specific chunk layout. The unPNG decoder never attempts to "parse" chunks (or parse zlib, or parse DEFLATE), it simply treats the expected values as magic byte sequences, and bails out if they don't match.
 
-PNG supports ancilliary chunks and other sources of flexibility. unPNG does not - we only support a specific chunk layout. The unPNG decoder never attempts to "parse" chunks (or parse zlib, or parse DEFLATE), it simply treats the expected values as magic byte sequences.
+That specific chunk layout is:
+
+```
+IHDR
+unPn
+IDAT
+IEND
+```
+
+The `unPn` chunk contains a single byte - ascii `G`, meaning that if you inspect the file in a hexeditor you'll see the string `unPnG`. This chunk has two purposes - firstly it makes the file more easily identifiable as an unPNG file (to humans and machines alike), and secondly it acts as padding, ensuring that the first byte of actual pixel data occurs `0x40` bytes into the file. Alignment is nice to have!
 
 Until I write proper docs/specs, looking at `encoder.py` is perhaps the easiest way to understand the details.
 
@@ -43,5 +54,7 @@ Until I write proper docs/specs, looking at `encoder.py` is perhaps the easiest 
 - Write a spec!
 
 - Document `unpng.h`
+
+- Make `unpng.h` more portable.
 
 - Set up fuzzing.
