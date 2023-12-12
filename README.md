@@ -79,3 +79,5 @@ Until I write proper docs/specs, looking at the source is perhaps the easiest wa
 
 - https://qoiformat.org/ - QOI, "The Quite OK Image Format for
 Fast, Lossless Compression"
+
+- https://tools.suckless.org/farbfeld/ - "farbfeld is a lossless image format which is easy to parse, pipe and compress"
