@@ -106,7 +106,7 @@ def unpng_encode(out, pixfmt: UNPNG_PIXFMT, im: Image):
 		idat += row_magic + row_data
 
 	# final deflate block of length zero, plus adler32
-	idat += b"\x03\x00" + adlersum.to_bytes(4, "big")
+	idat += b"\x02\x08\x30\x00" + adlersum.to_bytes(4, "big")
 
 	write_png_chunk(out, b"IDAT", idat)
 	write_png_chunk(out, b"IEND", b"")

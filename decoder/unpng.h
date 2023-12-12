@@ -58,7 +58,7 @@ static const uint8_t UNPNG_MAGIC2[] = {
 };
 
 static const uint8_t UNPNG_MAGIC_ROWEND[] = {
-	0x03, 0x00 // zlib final block
+	0x02, 0x08, 0x30, 0x00 // zlib final block
 };
 static const uint8_t UNPNG_MAGIC_IEND[] = {
 	0x00, 0x00, 0x00, 0x00,
@@ -145,7 +145,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 	was a valid PNG. We don't check checksums, though.
 	*/
 
-	const uint32_t idat_len = img->stride * img->height + 8; // due to constraints on width and height, this can never overflow
+	const uint32_t idat_len = img->stride * img->height + sizeof(UNPNG_MAGIC_ROWEND) + 6; // due to constraints on width and height, this can never overflow
 	const unsigned char idat_magic[] = {
 		(idat_len >> 24) & 0xff,
 		(idat_len >> 16) & 0xff,
