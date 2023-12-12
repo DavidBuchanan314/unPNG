@@ -16,6 +16,7 @@ enum unpng_pixfmt {
 	UNPNG_PIXFMT_INVALID = 1, // currently unused
 	UNPNG_PIXFMT_RGB888 = 2,
 	UNPNG_PIXFMT_RGBA8888 = 3,
+	UNPNG_PIXFMT_GREY8 = 4,
 };
 
 enum unpng_err {
@@ -45,6 +46,9 @@ static const uint8_t UNPNG_MAGIC1_RGB888[] = {
 };
 static const uint8_t UNPNG_MAGIC1_RGBA8888[] = {
 	0x08, 0x06, 0x00, 0x00, 0x00
+};
+static const uint8_t UNPNG_MAGIC1_GREY8[] = {
+	0x08, 0x00, 0x00, 0x00, 0x00
 };
 
 static const uint8_t UNPNG_MAGIC2[] = {
@@ -105,6 +109,9 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 	} else if (BUF_CMP(data + UNPNG_MAGIC1_OFF, UNPNG_MAGIC1_RGBA8888) == 0) {
 		img->pixfmt = UNPNG_PIXFMT_RGBA8888;
 		img->stride = img->width * 4 + UNPNG_ROW_OVERHEAD;
+	} else if (BUF_CMP(data + UNPNG_MAGIC1_OFF, UNPNG_MAGIC1_GREY8) == 0) {
+		img->pixfmt = UNPNG_PIXFMT_GREY8;
+		img->stride = img->width * 1 + UNPNG_ROW_OVERHEAD;
 	} else {
 		return UNPNG_ERR_MAGIC;
 	}

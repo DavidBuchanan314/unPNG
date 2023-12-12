@@ -6,7 +6,7 @@ A backward-compatible subset of the PNG file format, for storing *uncompressed* 
 
 Parsing image file formats is [hard](https://binarly.io/posts/The_Far_Reaching_Consequences_of_LogoFAIL/). Most image file formats in common usage are rather flexible, and PNG is no exception. Flexibility breeds bugs, and this is an experiment in cutting it down to the bare minimum.
 
-All unPNGs are fully valid PNGs, and can be viewed in standard image viewers.
+All unPNGs are valid PNGs, and can be viewed in standard image viewers.
 
 However, most PNGs are not valid unPNGs - you need to use a special encoder (like the one in this repo).
 
@@ -76,3 +76,6 @@ Until I write proper docs/specs, looking at the source is perhaps the easiest wa
 - https://en.wikipedia.org/wiki/Netpbm - A minimal bitmap file format.
 
 - https://richg42.blogspot.com/2023/12/announcing-cpng-compatible-network.html - CPNG, a backwards compatible fork of PNG. While unPNG is focused on minimalism, CPNG focuses on enhancements. In some sense they're opposites!
+
+- https://qoiformat.org/ - QOI, "The Quite OK Image Format for
+Fast, Lossless Compression"

@@ -6,6 +6,9 @@
 #include <SDL2/SDL.h>
 
 SDL_Surface* surface_from_unpng(struct unpng *img) {
+	SDL_Surface *surf;
+	SDL_Color pal[256];
+
 	switch (img->pixfmt)
 	{
 	case UNPNG_PIXFMT_RGB888:
@@ -25,6 +28,26 @@ SDL_Surface* surface_from_unpng(struct unpng *img) {
 			0x00ff0000,
 			0xff000000
 		);
+	
+	case UNPNG_PIXFMT_GREY8:
+		// This seems convoluted but it seems like the only way to get SDL
+		// to load a greyscale image from a buffer
+		surf = SDL_CreateRGBSurfaceWithFormatFrom(
+			(void*)img->buffer, img->width, img->height, 8, img->stride,
+			SDL_PIXELFORMAT_INDEX8
+		);
+		if (surf == NULL) {
+			return NULL;
+		}
+		for(int i = 0; i<0x100; i++) { // greyscale "identity" palette
+			pal[i].a = 0xff;
+			pal[i].r = pal[i].g = pal[i].b = i;
+		}
+		if(SDL_SetPaletteColors(surf->format->palette, pal, 0, 256) != 0) {
+			return NULL;
+		}
+
+		return surf;
 	
 	default:
 		return NULL;

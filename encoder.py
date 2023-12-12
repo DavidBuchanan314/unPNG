@@ -3,8 +3,9 @@ from PIL import Image
 from enum import Enum
 
 class UNPNG_PIXFMT(Enum):
-	RGB888 = 2
+	RGB888   = 2
 	RGBA8888 = 3
+	GREY8    = 4
 
 # https://www.w3.org/TR/2022/WD-png-3-20221025/#5PNG-file-signature
 PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n'
@@ -52,11 +53,13 @@ def encode_png_ihdr(
 PIL_MODES = {
 	UNPNG_PIXFMT.RGB888:   "RGB",
 	UNPNG_PIXFMT.RGBA8888: "RGBA",
+	UNPNG_PIXFMT.GREY8:    "L",
 }
 
 PNG_COLOUR_TYPES = {
 	UNPNG_PIXFMT.RGB888:   2,
 	UNPNG_PIXFMT.RGBA8888: 6,
+	UNPNG_PIXFMT.GREY8:    0,
 }
 
 UNPNG_MAX_RES = 0x2000
@@ -66,7 +69,11 @@ def unpng_encode(out, pixfmt: UNPNG_PIXFMT, im: Image):
 	if width > UNPNG_MAX_RES or height > UNPNG_MAX_RES:
 		raise Exception("image too big")
 	
-	imdata = b"".join(bytes(x) for x in im.convert(PIL_MODES[pixfmt]).getdata())
+	data_raw = im.convert(PIL_MODES[pixfmt]).getdata()
+	if type(data_raw[0]) is int: # true for greyscale
+		imdata = bytes(data_raw)
+	else: # it's a list of tuples
+		imdata = b"".join(bytes(x) for x in data_raw)
 
 	out.write(PNG_SIGNATURE)
 	write_png_chunk(out, b"IHDR", encode_png_ihdr(width, height, colour_type=PNG_COLOUR_TYPES[pixfmt]))
@@ -78,6 +85,8 @@ def unpng_encode(out, pixfmt: UNPNG_PIXFMT, im: Image):
 		base_stride = 3 * width
 	elif pixfmt == UNPNG_PIXFMT.RGBA8888:
 		base_stride = 4 * width
+	elif pixfmt == UNPNG_PIXFMT.GREY8:
+		base_stride = width
 	else:
 		raise Exception("bad pixfmt")
 	
@@ -112,10 +121,10 @@ if __name__ == "__main__":
 
 	parser.add_argument("input", help="input file path")
 	parser.add_argument("output", help="output file path")
-	parser.add_argument("--no-alpha", help="whether to output an alpha channel", default=False, required=False, action="store_true")
+	# TODO: add argument for selecting pixel mode!!!
 
 	args = parser.parse_args()
 
 	im = Image.open(args.input)
 	with open(args.output, "wb") as out:
-		unpng_encode(out, UNPNG_PIXFMT.RGB888 if args.no_alpha else UNPNG_PIXFMT.RGBA8888, im)
+		unpng_encode(out, UNPNG_PIXFMT.RGB888, im)
