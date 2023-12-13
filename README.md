@@ -74,6 +74,8 @@ Until I write proper docs/specs, looking at the source is perhaps the easiest wa
 
 ## Some other things you may be interested in:
 
+- https://www.da.vidbuchanan.co.uk/blog/hello-png.html - An introduction to the PNG file format itself.
+
 - http://public-domain.advel.cz/ - Some minimal zlib and PNG implementations.
 
 - https://en.wikipedia.org/wiki/Netpbm - A minimal bitmap file format.
