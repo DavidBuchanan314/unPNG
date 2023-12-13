@@ -22,7 +22,7 @@ However, most PNGs are not valid unPNGs - you need to use a special encoder (lik
 
 ## What's in this repo?
 
-This repo contains an encoder and a decoder program. The encoder is writte in Python, and the decoder is a single-header C library.
+This repo contains an encoder and a decoder program. The encoder is written in Python, and the decoder is a single-header C library.
 
 Notably, the decoder **never copies any buffers**. It simply verifies the structure of the buffer you give it, and returns the metadata you need to view/process it - the width, height, pixel format, stride (aka pitch).
 
