@@ -2,6 +2,9 @@
 
 A backward-compatible subset of the PNG file format, for storing *uncompressed* bitmaps. unPNG files can be decoded with a simple zero-copy parser.
 
+![annotated hexdump of example file](https://github.com/DavidBuchanan314/unPNG/assets/13520633/e8c0fbf0-5dec-431b-8c91-e70510ba886c)
+*^ Annotated hexdump of an 8x8 8-bit greyscale unPNG file*
+
 ## Why?
 
 Parsing image file formats is [hard](https://binarly.io/posts/The_Far_Reaching_Consequences_of_LogoFAIL/). Most image file formats in common usage are rather flexible, and PNG is no exception. Flexibility breeds bugs, and this is an experiment in cutting it down to the bare minimum.
