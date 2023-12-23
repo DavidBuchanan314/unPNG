@@ -141,7 +141,7 @@ static int unpng_parse(struct unpng *img, const uint8_t *data, size_t length)
 
 	/*
 	At this point, all the actual parsing is already complete, but we still
-	want to check various constrants to ensure that the input
+	want to check various constraints to ensure that the input
 	was a valid PNG. We don't check checksums, though.
 	*/
 
