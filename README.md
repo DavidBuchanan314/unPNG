@@ -74,6 +74,8 @@ Until I write proper docs/specs, looking at the source is perhaps the easiest wa
 
 ## Some other things you may be interested in:
 
+- https://entropymine.wordpress.com/2023/11/28/making-an-uncompressed-png-image-file RQLPNG - A *very* similar idea, published shortly before unPNG, although I wasn't aware of it at the time.
+
 - https://www.da.vidbuchanan.co.uk/blog/hello-png.html - An introduction to the PNG file format itself.
 
 - http://public-domain.advel.cz/ - Some minimal zlib and PNG implementations.
